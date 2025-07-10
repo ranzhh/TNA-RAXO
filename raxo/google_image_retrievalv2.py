@@ -21,9 +21,8 @@ nltk.download('averaged_perceptron_tagger')
 ##############################################################
 
 
-#API_KEY = 'AIzaSyAlBWHZjAuN2UF5i7v32eMRdWuwlzzYShQ' 
-API_KEY = 'AIzaSyAJgDAUqx-EoxAvjxd6l1llkrXOjwNN2Ms'
-CX = '927c31b927bcb453d'
+API_KEY = ''
+CX = ''
 INIT_IMAGES_DOWNLOAD_DIR = 'imgs/'
 INIT_IMAGES_JSON = 'annotations.json'
 FINAL_IMAGES_ = 'imgs_final/'
