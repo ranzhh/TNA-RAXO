@@ -24,7 +24,9 @@
 
 ## TO DO
 - [x] Release dataset
-- [ ] Release code
+- [x] Release code
+- [ ] Write tutorial
+- [ ] Release docker image
 - [ ] Release precomputed visual descriptors
 
 ## Summary
