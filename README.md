@@ -25,6 +25,7 @@
 ## TO DO
 - [x] Release dataset
 - [ ] Release code
+- [ ] Release precomputed visual descriptors
 
 ## Summary
 This is the official repository of [**Superpowering Open-Vocabulary Object Detectors for X-ray Vision**](https://arxiv.org/abs/2503.17071).
