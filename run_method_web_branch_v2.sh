@@ -62,7 +62,9 @@ detectors=("groundingDINO" "detic" "CoDet" "VLDet")
 # done
 
 
-# Loop through each detector
+#############################################################
+# 2) CLASSIFICATION
+#############################################################
 for detector in "${detectors[@]}"
 do
     # Loop through each dataset
