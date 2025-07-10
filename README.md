@@ -16,6 +16,8 @@
 [![arXiv](https://img.shields.io/badge/cs.CV-2410.07752-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2503.17071)
 [![GitHub](https://img.shields.io/badge/GitHub-RAXO-blue?logo=github)](https://github.com/PAGF188/RAXO)
 [![Static Badge](https://img.shields.io/badge/website-RAXO-8A2BE2)](https://pagf188.github.io/RAXO/)
+[![Dataset]🤗 Huggingface]([https://pagf188.github.io/RAXO/](https://huggingface.co/datasets/PAGF/DET-COMPASS))
+
 </div>
 
 
