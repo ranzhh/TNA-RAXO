@@ -36,7 +36,7 @@ echo
 # 2) TO BUILD VISUAL DESCRIPTORS (only needed if you do not use the precomputed ones)
 #############################################################
 
-# echo "----BUILDING KNOW-BRANCH VISUAL DESCRIPTORS----"
+# echo "----BUILDING IN-HOUSE VISUAL DESCRIPTORS----"
 # CUDA_VISIBLE_DEVICES=3 python raxo/obtain_masks.py \
 #     --gt /datasets/xray-datasets/support_full/full_30_support_set.json \
 #     --image_path /datasets/xray-datasets/support_full/images \
