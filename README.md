@@ -93,7 +93,7 @@ Additionally, this script includes a function that computes all intermediate set
 bash python raxo/final_cocoapi.py
 ```
 
-## COMPUTING DESCRIPTORS
+## Computing Visual Descriptors
 
 ### In-house descriptors
 To obtain the in-house descriptors, check **Step 2** in the `run_method_database_branch_v2.sh` script.  
