@@ -116,6 +116,6 @@ If you find RAXO useful for your research and applications, please cite using th
       booktitle={ICCV},
       year={2025},
 }
-
+```
 
 
