@@ -100,7 +100,8 @@ To obtain the in-house descriptors, check **Step 2** in the `run_method_database
 We release [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex) the images used to build these descriptors by combining the six datasets, along with their COCO-format annotations.
 
 ### Web descriptors
-To obtain the in-house descriptors, check **Step 2** in the `run_method_web_branch_v2.sh` script.
+To obtain the in-house descriptors, check **Step 1** in the `run_method_web_branch_v2.sh` script.
+
 **Critical**: You will need a configured Google Custom Search API to retrieve the images, and a GPT-4 API key to run the material-transfer.
 
 
