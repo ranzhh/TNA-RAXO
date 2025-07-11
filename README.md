@@ -105,7 +105,17 @@ To obtain the in-house descriptors, check **Step 1** in the `run_method_web_bran
 **Critical**: You will need a configured Google Custom Search API to retrieve the images, and a GPT-4 API key to run the material-transfer.
 
 
+## Citation
 
+If you find RAXO useful for your research and applications, please cite using this BibTeX:
+```bibtex
+
+@inproceedings{garcia2025superpowering,
+      title={Superpowering Open-Vocabulary Object Detectors for X-ray Vision}, 
+      author={Garcia-Fernandez, Pablo and Vaquero, Lorenzo and Liu, Mingxuan and Xue, Feng and Cores, Daniel and Sebe, Nicu and Mucientes, Manuel and Ricci, Elisa},
+      booktitle={ICCV},
+      year={2025},
+}
 
 
 
