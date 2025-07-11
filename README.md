@@ -38,7 +38,8 @@ Code and dataset will be made available.
 
 ## Release
 - Our proposed X-ray/RGB [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS) dataset is now available.
-- The precomputed visual descriptors (both in-house and web), along with the initial detections from the detectors (G-DINO, VLDet, Detic, and CoDET), are available [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS).
+- The precomputed visual descriptors (both in-house and web), along with the initial detections from the detectors (G-DINO, VLDet, Detic, and CoDET), are available [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
+- We release the datasets annotations in coco format, along with the train/test splits [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex)
 
 
 ## Set-up
@@ -48,21 +49,21 @@ Code and dataset will be made available.
 git clone https://github.com/PAGF188/RAXO
 ```
 2. We use Docker Hub to share the environment. You can find the images [**here**]([https://huggingface.co/datasets/PAGF/DET-COMPASS](https://hub.docker.com/repository/docker/pagf18/dinov2/tags/iccv25_v2/sha256-a8330f054b23275611b2c92822bd11d4937695bdddf77fca378d9febe1188368)).
-3. You need to download the 6 datasets. Some of them are not in COCO format, you must convert their annotations.
+3. You need to download the 6 datasets. Some of them are not in COCO format. For ease of use, we release the COCO-format annotations and train/test splits [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
    - [**PIXray**](https://github.com/Mbwslib/DDoAS)
    - [**PIDray**](https://github.com/bywang2018/security-dataset)
    - [**CLCXray**](https://github.com/GreysonPhoenix/CLCXray)
    - [**DvXray**](https://ieeexplore.ieee.org/document/10458082)
    - [**HiXray**](https://github.com/DIG-Beihang/XrayDetection)
    - [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT: For ease of use, we directly share these initial detections [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS).**
+4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT: For ease of use, we directly share these initial detections [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).**
   - [**G-DINO**]([https://huggingface.co/datasets/PAGF/DET-COMPASS](https://github.com/open-mmlab/mmdetection)
   - [**VLDet**](https://github.com/clin1223/VLDet)
   - [**Detic**](https://github.com/facebookresearch/Detic)
   - [**CoDet**](https://github.com/CVMI-Lab/CoDet)
 
 ## Inference with precomputed descriptors
-To simplify execution, we provide precomputed visual descriptors for both the in-house and web-retrieval components. You can download them [**here**]().
+To simplify execution, we provide precomputed visual descriptors for both the in-house and web-retrieval components. You can download them [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
 
 ### Running the Method (100/0 Setting)
 
@@ -92,15 +93,16 @@ Additionally, this script includes a function that computes all intermediate set
 bash python raxo/final_cocoapi.py
 ```
 
+## COMPUTING DESCRIPTORS
 
+### In-house descriptors
+To obtain the in-house descriptors, check **Step 2** in the `run_method_database_branch_v2.sh` script.  
+We release [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex) the images used to build these descriptors by combining the six datasets, along with their COCO-format annotations.
 
+### Web descriptors
+To obtain the in-house descriptors, check **Step 2** in the `run_method_web_branch_v2.sh` script.
+**Critical**: You will need a configured Google Custom Search API to retrieve the images, and a GPT-4 API key to run the material-transfer.
 
-## TO DO
-- [x] Release dataset
-- [x] Release code
-- [ ] Write tutorial
-- [ ] Release docker image
-- [ ] Release precomputed visual descriptors
 
 
 
