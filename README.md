@@ -39,7 +39,7 @@ Code and dataset will be made available.
 ## Release
 - Our proposed X-ray/RGB [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS) dataset is now available.
 - The precomputed visual descriptors (both in-house and web), along with the initial detections from the detectors (G-DINO, VLDet, Detic, and CoDET), are available [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
-- We release the datasets annotations in coco format, along with the train/test splits [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex)
+- The dataset’s test annotations in COCO format are available [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex)
 
 
 ## Set-up
@@ -48,8 +48,8 @@ Code and dataset will be made available.
 ```bash
 git clone https://github.com/PAGF188/RAXO
 ```
-2. We use Docker Hub to share the environment. You can find the images [**here**]([https://huggingface.co/datasets/PAGF/DET-COMPASS](https://hub.docker.com/repository/docker/pagf18/dinov2/tags/iccv25_v2/sha256-a8330f054b23275611b2c92822bd11d4937695bdddf77fca378d9febe1188368)).
-3. You need to download the 6 datasets. Some of them are not in COCO format. For ease of use, we release the COCO-format annotations and train/test splits [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
+2. We use Docker Hub to share the environment. You can find the images [**here**](https://hub.docker.com/repository/docker/pagf18/dinov2/tags/iccv25_v2/sha256-a8330f054b23275611b2c92822bd11d4937695bdddf77fca378d9febe1188368).
+3. You need to download the 6 datasets. Some of them are not in COCO format. For ease of use, we provide the COCO-format annotations for the test split [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
    - [**PIXray**](https://github.com/Mbwslib/DDoAS)
    - [**PIDray**](https://github.com/bywang2018/security-dataset)
    - [**CLCXray**](https://github.com/GreysonPhoenix/CLCXray)
