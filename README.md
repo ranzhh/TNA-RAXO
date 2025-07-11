@@ -40,13 +40,10 @@ Code and dataset will be made available.
 - Our proposed X-ray/RGB [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS) dataset is now available.
 - The precomputed visual descriptors (both in-house and web), along with the initial detections from the detectors (G-DINO, VLDet, Detic, and CoDET), are available [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS).
 
-## Contents
-- [Set-up](#Set-up)
-
 
 ## Set-up
 
-1. Clone this repository and navigate to LLaVA folder
+1. Clone this repository
 ```bash
 git clone https://github.com/PAGF188/RAXO
 ```
@@ -58,11 +55,43 @@ git clone https://github.com/PAGF188/RAXO
    - [**DvXray**](https://ieeexplore.ieee.org/document/10458082)
    - [**HiXray**](https://github.com/DIG-Beihang/XrayDetection)
    - [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT**: For ease of use, we directly share these initial detections [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS)..
-  - [**G-DINO**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-  - [**VLDet**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-  - [**Detic**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-  - [**CoDet**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT: For ease of use, we directly share these initial detections [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS).**
+  - [**G-DINO**]([https://huggingface.co/datasets/PAGF/DET-COMPASS](https://github.com/open-mmlab/mmdetection)
+  - [**VLDet**](https://github.com/clin1223/VLDet)
+  - [**Detic**](https://github.com/facebookresearch/Detic)
+  - [**CoDet**](https://github.com/CVMI-Lab/CoDet)
+
+## Inference with precomputed descriptors
+To simplify execution, we provide precomputed visual descriptors for both the in-house and web-retrieval components. You can download them [**here**]().
+
+### Running the Method (100/0 Setting)
+
+To run the classification using only in-house descriptors (i.e., the 100/0 setting), execute the following script:
+```bash
+bash run_method_database_branch_v2.sh
+```
+Before running the script, make sure to update the following variables to match your local paths:
+```bash
+RESULTS_PATH=/models/ICCV25_experimentation/
+DATASET_PATH="/datasets/xray-datasets/"
+```
+Additionally, update line 74 in the script to point to the correct path for the in-house descriptors:
+```bash
+--prototypes /models/ICCV25_experimentation/known_prototypes_sam2.pt \
+```
+
+### Running the Method (0/100 Setting)
+To run the classification using only web descriptors (i.e., the 0/100 setting), execute the following script:
+```bash
+bash run_method_web_branch_v2.sh
+```
+Before running the script, make sure to also update the variables to match your local paths.  
+Additionally, this script includes a function that computes all intermediate settings (80/20, 50/50, 20/80), provided that the results for 100/0 and 0/100 have already been generated:
+
+```bash
+bash python raxo/final_cocoapi.py
+```
+
 
 
 
