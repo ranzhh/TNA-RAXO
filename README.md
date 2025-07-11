@@ -57,10 +57,10 @@ git clone https://github.com/PAGF188/RAXO
    - [**HiXray**](https://github.com/DIG-Beihang/XrayDetection)
    - [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
 4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT: For ease of use, we directly share these initial detections [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).**
-  - [**G-DINO**](https://github.com/open-mmlab/mmdetection)
-  - [**VLDet**](https://github.com/clin1223/VLDet)
-  - [**Detic**](https://github.com/facebookresearch/Detic)
-  - [**CoDet**](https://github.com/CVMI-Lab/CoDet)
+    - [**G-DINO**](https://github.com/open-mmlab/mmdetection)
+    - [**VLDet**](https://github.com/clin1223/VLDet)
+    - [**Detic**](https://github.com/facebookresearch/Detic)
+    - [**CoDet**](https://github.com/CVMI-Lab/CoDet)
 
 ## Inference with precomputed descriptors
 To simplify execution, we provide precomputed visual descriptors for both the in-house and web-retrieval components. You can download them [**here**](https://nubeusc-my.sharepoint.com/:f:/g/personal/pablogarcia_fernandez_usc_es/EmSHyj8g6LlHhpHVLCdd67sBwumUlchoCoJS_vH69jtJ1w?e=MhS3Ex).
