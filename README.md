@@ -21,6 +21,10 @@
 
 ## 📚 Abstract
 
+<div align="center">
+  <img src="./assets/teaser.png" alt="Teaser" style="width: 500px; height: auto;">
+</div>
+
 Open-vocabulary object detection (OvOD) is set to revolutionize security screening by enabling systems to recognize any item in X-ray scans.
 However, developing effective OvOD models for X-ray imaging presents unique challenges due to data scarcity and the modality gap that prevents direct adoption of RGB-based solutions.
 To overcome these limitations, we propose **RAXO**, a training-free framework that repurposes off-the-shelf RGB OvOD detectors for robust X-ray detection.
@@ -32,15 +36,34 @@ To further support research in this emerging field, we also introduce DET-COMPAS
 Code and dataset will be made available.
 
 
-## Summary
-- This is the official repository of [**Superpowering Open-Vocabulary Object Detectors for X-ray Vision**](https://arxiv.org/abs/2503.17071).
-- We propose **RAXO**, a training-free method that seamlessly adapts RGB OvOD models to X-ray
+## Release
 - Our proposed X-ray/RGB [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS) dataset is now available.
+- The precomputed visual descriptors (both in-house and web), along with the initial detections from the detectors (G-DINO, VLDet, Detic, and CoDET), are available [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS).
+
+## Contents
+- [Set-up](#Set-up)
 
 
-<div align="center">
-  <img src="./assets/teaser.png" alt="Teaser" style="width: 500px; height: auto;">
-</div>
+## Set-up
+
+1. Clone this repository and navigate to LLaVA folder
+```bash
+git clone https://github.com/PAGF188/RAXO
+```
+2. We use Docker Hub to share the environment. You can find the images [**here**]([https://huggingface.co/datasets/PAGF/DET-COMPASS](https://hub.docker.com/repository/docker/pagf18/dinov2/tags/iccv25_v2/sha256-a8330f054b23275611b2c92822bd11d4937695bdddf77fca378d9febe1188368)).
+3. You need to download the 6 datasets. Some of them are not in COCO format, you must convert their annotations.
+   - [**PIXray**](https://github.com/Mbwslib/DDoAS)
+   - [**PIDray**](https://github.com/bywang2018/security-dataset)
+   - [**CLCXray**](https://github.com/GreysonPhoenix/CLCXray)
+   - [**DvXray**](https://ieeexplore.ieee.org/document/10458082)
+   - [**HiXray**](https://github.com/DIG-Beihang/XrayDetection)
+   - [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+4. You need to download the 4 detectors and obtain the initial set of proposals. **IMPORTANT**: For ease of use, we directly share these initial detections [**here**](https://huggingface.co/datasets/PAGF/DET-COMPASS)..
+  - [**G-DINO**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+  - [**VLDet**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+  - [**Detic**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+  - [**CoDet**](https://huggingface.co/datasets/PAGF/DET-COMPASS)
+
 
 
 ## TO DO
