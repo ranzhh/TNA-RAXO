@@ -17,29 +17,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-RAXO-blue?logo=github)](https://github.com/PAGF188/RAXO)
 [![Static Badge](https://img.shields.io/badge/website-RAXO-8A2BE2)](https://pagf188.github.io/RAXO/)
 [![Static Badge](https://img.shields.io/badge/DET-COMPASS-8A2BE2)](https://huggingface.co/datasets/PAGF/DET-COMPASS)
-
-
 </div>
-
-
-## TO DO
-- [x] Release dataset
-- [x] Release code
-- [ ] Write tutorial
-- [ ] Release docker image
-- [ ] Release precomputed visual descriptors
-
-## Summary
-This is the official repository of [**Superpowering Open-Vocabulary Object Detectors for X-ray Vision**](https://arxiv.org/abs/2503.17071).
-
-The dataset is available at https://huggingface.co/datasets/PAGF/DET-COMPASS.
-
-We propose **RAXO**, a training-free method that seamlessly adapts RGB OvOD models to X-ray
-
-<div align="center">
-  <img src="./assets/teaser.png" alt="Teaser">
-</div>
-
 
 ## 📚 Abstract
 
@@ -52,3 +30,27 @@ These visual descriptors replace text-based classification in OvOD, leveraging i
 Extensive experiments demonstrate that RAXO consistently improves OvOD performance, providing an average mAP increase of up to 17.0 points over base detectors.
 To further support research in this emerging field, we also introduce DET-COMPASS, a new benchmark featuring bounding box annotations for over 300 object categories, enabling large-scale evaluation of OvOD in X-ray.
 Code and dataset will be made available.
+
+
+## Summary
+- This is the official repository of [**Superpowering Open-Vocabulary Object Detectors for X-ray Vision**](https://arxiv.org/abs/2503.17071).
+- We propose **RAXO**, a training-free method that seamlessly adapts RGB OvOD models to X-ray
+- Our proposed X-ray/RGB [**DET-COMPASS**](https://huggingface.co/datasets/PAGF/DET-COMPASS) dataset is now available.
+
+
+<div align="center">
+  <img src="./assets/teaser.png" alt="Teaser" style="width: 500px; height: auto;">
+</div>
+
+
+## TO DO
+- [x] Release dataset
+- [x] Release code
+- [ ] Write tutorial
+- [ ] Release docker image
+- [ ] Release precomputed visual descriptors
+
+
+
+
+
