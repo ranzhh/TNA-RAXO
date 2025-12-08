@@ -19,7 +19,7 @@ import torch.nn.functional as F
 DINO_DIMENSION=768
 DINO_PATH_SIZE=14
 device = "cuda" if torch.cuda.is_available() else "cpu"
-assert device == "cuda", "This script requires a GPU to run."
+# assert device == "cuda", "This script requires a GPU to run."
 
 
 parser = argparse.ArgumentParser(description='Build prototypes from GT in coco format')
