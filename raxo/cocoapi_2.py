@@ -1,13 +1,25 @@
+import argparse
+
+from metrics import compute_recall
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
-import argparse
-from metrics import compute_recall
+
 # from tidecv import TIDE, datasets
 
 # Setup command line argument parsing
 parser = argparse.ArgumentParser(description="Evaluate COCO detections.")
-parser.add_argument('--cocoGt', type=str, required=True, help="Path to the ground truth COCO annotations (coco_annotations.json).")
-parser.add_argument('--cocoDt', type=str, required=True, help="Path to the detection result file (e.g., detections.json).")
+parser.add_argument(
+    "--cocoGt",
+    type=str,
+    required=True,
+    help="Path to the ground truth COCO annotations (coco_annotations.json).",
+)
+parser.add_argument(
+    "--cocoDt",
+    type=str,
+    required=True,
+    help="Path to the detection result file (e.g., detections.json).",
+)
 args = parser.parse_args()
 
 # Load the ground truth and detection results
@@ -16,10 +28,10 @@ cocoDt = cocoGt.loadRes(args.cocoDt)
 
 # Perform COCO evaluation
 cocoEval = COCOeval(cocoGt, cocoDt, "bbox")
+
 cocoEval.evaluate()
 cocoEval.accumulate()
 cocoEval.summarize()
-
 
 
 # Compute recall
