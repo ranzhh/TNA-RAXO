@@ -4,10 +4,10 @@
 ########################################################
 #### CHANGE THIS VARIABLES
 ########################################################
-RESULTS_PATH=/models/ICCV25_experimentation/
-DATASET_PATH="/datasets/xray-datasets/"
-datasets=("PIXray" "pidray" "CLCXray" "DET-COMPASS" "HiXray" "DvXray")
-detectors=("groundingDINO" "detic" "CoDet" "VLDet")
+RESULTS_PATH="../results/"
+DATASET_PATH="../data/datasets/"
+datasets=("PIXray") # "pidray" "CLCXray" "DET-COMPASS" "HiXray" "DvXray")
+detectors=("groundingDINO") # "detic" "CoDet" "VLDet")
 ########################################################
 
 
@@ -43,21 +43,21 @@ detectors=("groundingDINO" "detic" "CoDet" "VLDet")
     
     # # 3) OBTAIN MASKS
     # CUDA_VISIBLE_DEVICES=0 python raxo/obtain_masks.py \
-    #     --gt /models/ICCV25_experimentation/prototypes_web_2/${dataset}/images/annotations.json \
-    #     --image_path /models/ICCV25_experimentation/prototypes_web_2/${dataset}/images/imgs \
+    #     --gt ${RESULTS_PATH}prototypes_web_2/${dataset}/images/annotations.json \
+    #     --image_path ${RESULTS_PATH}prototypes_web_2/${dataset}/images/imgs \
     #     --branch unknown
     
     # 4) STYLE TRANSFER v2
     # python raxo/style_transfer_v2.py \
-    #     --gt /models/ICCV25_experimentation/prototypes_web_2/${dataset}/images/annotations_with_masks.json \
-    #     --image_path /models/ICCV25_experimentation/prototypes_web_2/${dataset}/images/imgs \
-    #     --out /models/ICCV25_experimentation/prototypes_web_2/${dataset}/imgs_style_transfer_v2_v2 \
-    #     --colours /models/ICCV25_experimentation/colour_knowledge_material_clustering.json"
+    #     --gt ${RESULTS_PATH}prototypes_web_2/${dataset}/images/annotations_with_masks.json \
+    #     --image_path ${RESULTS_PATH}prototypes_web_2/${dataset}/images/imgs \
+    #     --out ${RESULTS_PATH}prototypes_web_2/${dataset}/imgs_style_transfer_v2_v2 \
+    #     --colours ${RESULTS_PATH}colour_knowledge_material_clustering.json"
 
     # # 5) BUILD the prototypes
     # CUDA_VISIBLE_DEVICES=0 python raxo/build_prototypes_unknown_concepts_with_masks_prop.py \
-    #     --gt /models/ICCV25_experimentation/prototypes_web_2/${dataset}/images/annotations_with_masks.json \
-    #     --image_path /models/ICCV25_experimentation/prototypes_web_2/${dataset}/imgs_style_transfer_v2_v2 \
+    #     --gt ${RESULTS_PATH}prototypes_web_2/${dataset}/images/annotations_with_masks.json \
+    #     --image_path ${RESULTS_PATH}prototypes_web_2/${dataset}/imgs_style_transfer_v2_v2 \
     #     --out ${RESULTS_PATH}prototypes_web_2/${dataset}_prot_sam2_style2_v2.pt
 # done
 
@@ -84,22 +84,22 @@ do
 
         python raxo/cocoapi_2.py \
             --cocoGt ${DATASET_PATH}${dataset}/annotations/full_test.json \
-            --cocoDt /models/ICCV25_experimentation/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
+            --cocoDt ${RESULTS_PATH}initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
 
 
         python raxo/uncertanty_estimation_fixed.py \
-            --dets /models/ICCV25_experimentation/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
+            --dets ${RESULTS_PATH}initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
 
         python raxo/cocoapi_2.py \
             --cocoGt ${DATASET_PATH}${dataset}/annotations/full_test.json \
-            --cocoDt /models/ICCV25_experimentation/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
+            --cocoDt ${RESULTS_PATH}initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
 
         
         # This is only when the in-house results are already computed
         python raxo/final_cocoapi.py \
             --cocoGt ${DATASET_PATH}${dataset}/annotations/full_test.json \
-            --cocoDt_database /models/ICCV25_experimentation/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_known_final_uncertanty.json \
-            --cocoDt_web /models/ICCV25_experimentation/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
+            --cocoDt_database ${RESULTS_PATH}initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_known_final_uncertanty.json \
+            --cocoDt_web ${RESULTS_PATH}initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_web_branch_v2.json
         
     done
 done
