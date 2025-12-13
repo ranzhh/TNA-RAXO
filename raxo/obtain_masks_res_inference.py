@@ -51,6 +51,18 @@ parser.add_argument(
     type=int,
     help="Limit the number of images to process. Default None (all images)",
 )
+parser.add_argument(
+    "--top_k",
+    type=int,
+    default=None,
+    help="Only process top K highest confidence detections per image. Default None (all detections)",
+)
+parser.add_argument(
+    "--score_threshold",
+    type=float,
+    default=None,
+    help="Only process detections with score >= threshold. Default None (no filtering)",
+)
 
 
 def save_coco(coco_dt, filtradas_anns, save_name):
@@ -117,41 +129,59 @@ def main(args, plot_result=False):
         # Load annotations of this image:
         annotations = dataset.loadAnns(dataset.getAnnIds(imgIds=img["id"]))
 
-        # For each annotation:
-        for anot in annotations:
-            # box (np.ndarray or None): A length 4 array given a box prompt to the model, in XYXY format.
-            boxes_xywh = np.array([anot["bbox"]])
-            boxes_xyxy = np.column_stack(
-                [
-                    boxes_xywh[:, 0],
-                    boxes_xywh[:, 1],
-                    boxes_xywh[:, 0] + boxes_xywh[:, 2],
-                    boxes_xywh[:, 1] + boxes_xywh[:, 3],
-                ]
-            )
+        # Skip if no annotations
+        if len(annotations) == 0:
+            continue
 
-            masks, _, _ = sam2_predictor.predict(
-                point_coords=None,
-                point_labels=None,
-                box=boxes_xyxy,
-                multimask_output=False,
-            )
-            # convert the shape to (n, H, W)
-            if masks.ndim == 4:
-                masks = masks.squeeze(1)
+        # Filter annotations by score threshold if specified
+        if args.score_threshold is not None:
+            annotations = [a for a in annotations if a.get("score", 1.0) >= args.score_threshold]
 
-            if plot_result:
-                plot(img_path, boxes_xyxy, masks, imag_id_name)
-                imag_id_name += 1
+        # Limit to top-k if specified (assumes annotations are already sorted by score descending)
+        if args.top_k is not None:
+            annotations = annotations[: args.top_k]
 
-            # Now save results in COCO format. We need to keep the same anot_id than the box to be
-            # able to load the mask in the next step.
+        # Skip if no annotations after filtering
+        if len(annotations) == 0:
+            continue
+
+        # Collect all boxes for this image (batch processing)
+        boxes_xywh = np.array([anot["bbox"] for anot in annotations])
+        boxes_xyxy = np.column_stack(
+            [
+                boxes_xywh[:, 0],
+                boxes_xywh[:, 1],
+                boxes_xywh[:, 0] + boxes_xywh[:, 2],
+                boxes_xywh[:, 1] + boxes_xywh[:, 3],
+            ]
+        )
+
+        # Single batched prediction for all boxes in this image
+        masks, _, _ = sam2_predictor.predict(
+            point_coords=None,
+            point_labels=None,
+            box=boxes_xyxy,
+            multimask_output=False,
+        )
+        # convert the shape to (n, H, W)
+        if masks.ndim == 4:
+            masks = masks.squeeze(1)
+
+        if plot_result:
+            plot(img_path, boxes_xyxy, masks, imag_id_name)
+            imag_id_name += 1
+
+        # Now save results in COCO format. We need to keep the same anot_id than the box to be
+        # able to load the mask in the next step.
+        # Iterate through annotations and their corresponding masks
+        for anot, mask in zip(annotations, masks):
             new_anot = copy.deepcopy(anot)
-            new_anot["mask"] = single_mask_to_rle(masks[0])
+            new_anot["mask"] = single_mask_to_rle(mask)
             annotations_with_masks.append(new_anot)
 
-    # Save json file
-    save_coco(dataset, annotations_with_masks, args.res.replace(".json", "_with_masks.json"))
+    # Save json file with unique name to avoid overwriting existing files
+    output_name = args.res.replace(".json", "_with_masks_batched.json")
+    save_coco(dataset, annotations_with_masks, output_name)
 
 
 if __name__ == "__main__":
