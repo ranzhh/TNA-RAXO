@@ -35,6 +35,7 @@ git clone https://github.com/facebookresearch/sam2.git
 cd sam2
 cd checkpoints
 ./download_ckpts.sh
+cd ..
 echo "SAM2_PATH=$(pwd)" >> ~/.env
 
 # LEO YOU CAN ADD YOUR STUFF HERE FOR REPLICABILITY, LOOK ABOVE
