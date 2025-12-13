@@ -5,8 +5,8 @@
 ########################################################
 RESULTS_PATH="../results"
 DATASET_PATH="../data/datasets"
-datasets=( "pidray" "DvXray") # "DET-COMPASS" "HiXray" "CLCXray" "PiXray")
-detectors=("groundingDINO" "detic" "CoDet" "VLDet")
+datasets=( "pidray") # "DvXray") # "DET-COMPASS" "HiXray" "CLCXray" "PiXray")
+detectors=("groundingDINO") # "detic" "CoDet" "VLDet")
 ########################################################
 
 # echo "----OBTAINING BASELINE RESULTS----"
