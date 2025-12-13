@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "google-genai>=0.2.0",
+    "google-images-search>=1.4.0",
     "matplotlib>=3.10.7",
     "networkx>=3.5",
     "nltk>=3.9.2",
