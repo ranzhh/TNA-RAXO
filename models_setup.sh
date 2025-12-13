@@ -25,6 +25,9 @@ else
     echo "uv is already installed."
 fi
 
+# Reload bashrc to ensure uv is in PATH
+source ~/.bashrc
+
 # Install required Python packages
 uv sync
 touch .env
