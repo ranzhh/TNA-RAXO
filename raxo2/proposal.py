@@ -40,31 +40,65 @@ class ImageProposalMethod:
         return styled_images
 
 
-def google_sam3d_blender_gather_fn(caption: str, n_images: int) -> Generator[Image, None, None]:
+def google_sam3d_blender_gather_fn(
+    caption: str, 
+    n_images: int, 
+    use_llm: bool = True,
+    use_blender: bool = True,
+    use_sam3d: bool = True
+) -> Generator[Image, None, None]:
     """This is our implementation of a gathering function using Google, SAM/SAM3D, and Blender.
 
     We first use Google to search for images related to the caption.
     Then, we use SAM3 to extract the mask that is most relevant to the caption.
     We use SAM3D to create a 3D representation of the masked region, export it to Blender.
     Finally, we render the 3D model in Blender to get multiple views of the object.
+    
+    Args:
+        caption: The search query/caption for the object
+        n_images: Number of images to gather
+        use_llm: If True, use LLM (Gemini) to generate diverse queries. If False, use simple query.
+        use_blender: If True, use Blender for multi-view rendering (placeholder)
+        use_sam3d: If True, use SAM3D for 3D model generation (placeholder)
     """
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
 
     from processors.blender import BlenderProcessor
     from processors.google import GoogleProcessor
     from processors.sam3d import SAMProcessor
 
+    # Initialize processors
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    google_cx = os.getenv("GOOGLE_CX") 
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    
+    google_processor = GoogleProcessor(google_api_key, google_cx, gemini_api_key)
     sam_processor = SAMProcessor()
     blender_processor = BlenderProcessor()
-    google_processor = GoogleProcessor()
 
     # Get the images from Google Search
-    images = google_processor.search_images(caption, n_images)
+    if use_llm and gemini_api_key:
+        queries = google_processor.generate_queries(caption)
+        images = google_processor.search_images(queries, n_images, out_dir="temp_images")
+    else:
+        # Simple query mode
+        simple_query = f"A photo of a {caption}"
+        images = google_processor.search_images([simple_query], n_images, out_dir="temp_images")
 
     for image in images:
-        # Extract the mask using SAM3
-        obj = sam_processor.model_from_caption(image, caption, threshold=0.5)
+        if use_sam3d:
+            # Extract the mask using SAM3
+            obj = sam_processor.model_from_caption(image, caption, threshold=0.5)
+            
+            if use_blender:
+                # Create a 3D model and render it in Blender
+                renders = blender_processor.multi_render_obj(obj, n_views=1)
+                yield from renders
+            else:
+                yield obj
+        else:
+            # Just yield the image if SAM3D is disabled
+            yield image
 
-        # Create a 3D model and render it in Blender
-        renders = blender_processor.multi_render_obj(obj, n_views=1)
-
-        yield from renders
