@@ -1,4 +1,7 @@
 #!/bin/bash
+    
+RAXO_DIR=$(pwd)
+
 
 # This file takes care of setting up the required environment for raxo2.
 # It installs necessary dependencies and configures the system.
@@ -72,7 +75,10 @@ fi
 
 
 # LEO YOU CAN ADD YOUR STUFF HERE FOR REPLICABILITY, LOOK ABOVE
-
+cd ~ 
+git clone https://github.com/facebookresearch/sam-3d-objects.git
+cd sam-3d-objects
+echo "SAM3D_PATH=$(pwd)" >> $RAXO_DIR/.env
 
 # ---------------------------------------------
 echo "Environment setup complete."

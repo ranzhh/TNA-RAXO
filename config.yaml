@@ -1,0 +1,43 @@
+# SAM-3D-Objects Configuration
+# Based on the actual pipeline.yaml structure
+
+# Model checkpoint
+checkpoint:
+  tag: "hf"
+  path: "/home/disi/sam-3d-objects/checkpoints/hf/pipeline.yaml"
+
+# Inference settings
+inference:
+  compile: false  # Set to true for faster inference after warmup
+  seed: 42
+  
+# Text-to-mask (optional, if using grounding)
+sam:
+  model_type: "vit_b"
+  checkpoint: "/home/disi/sam-3d-objects/checkpoints/sam/sam_vit_b_01ec64.pth"
+  points_per_side: 32
+  pred_iou_thresh: 0.88
+  stability_score_thresh: 0.95
+  
+# CLIP-based mask filtering (uses Hugging Face transformers)
+clip:
+  enabled: true
+  model: "openai/clip-vit-base-patch32"  # Options: openai/clip-vit-base-patch32, openai/clip-vit-base-patch16, openai/clip-vit-large-patch14
+  top_k: 10  # Number of top masks to evaluate with CLIP
+
+# Text-to-mask (optional, if using grounding)
+grounding:
+  enabled: false
+  model: "IDEA-Research/grounding-dino-base"
+  box_threshold: 0.35
+  text_threshold: 0.25
+
+# Output settings
+output:
+  format: "ply"  # Gaussian splat PLY format
+  save_path: "outputs/splat.ply"
+  
+# Device
+device:
+  use_cuda: true
+  gpu_id: 0
