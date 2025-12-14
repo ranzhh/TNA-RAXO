@@ -3,6 +3,8 @@
 # This file takes care of setting up the required environment for raxo2.
 # It installs necessary dependencies and configures the system.
 
+WORK_DIR=$(pwd)
+
 # Ensure curl and git are installed
 if ! command -v curl &> /dev/null
 then
@@ -30,16 +32,44 @@ source ~/.bashrc
 
 # Install required Python packages
 uv sync
-touch .env
+touch $WORK_DIR/.env
+
+# Install Blender from source if not already installed. Using version 4.4.3 as an example, make sure it's aligned with your BPY version!
+if ! command -v blender &> /dev/null
+then
+    echo "Blender could not be found, installing..."
+    mkdir -p $HOME/.local/share
+    mkdir -p $HOME/.local/bin
+    curl -L https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz | tar -xJ -C $HOME/.local/share/
+    mv $HOME/.local/share/blender-4.4.3-linux-x64/ $HOME/.local/share/blender
+
+    # Create a symlink to make blender accessible from anywhere
+    ln -s $HOME/.local/share/blender/blender $HOME/.local/bin/blender
+    
+    # Ensure ~/.local/bin is in PATH
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+else
+    echo "Blender is already installed." 
+
+fi
 
 # Download SAM2 and checkpoints
-cd ~
-git clone https://github.com/facebookresearch/sam2.git
-cd sam2
-cd checkpoints
-./download_ckpts.sh
-cd ..
-echo "SAM2_PATH=$(pwd)" >> ~/.env
+if [ ! -d "$HOME/sam2" ]; then
+    echo "SAM2 not found, cloning and downloading checkpoints..."
+    cd ~
+    git clone https://github.com/facebookresearch/sam2.git
+    cd sam2
+    cd checkpoints
+    ./download_ckpts.sh
+    cd ..
+    echo "SAM2_PATH=$(pwd)" >> ~$WORK_DIR/.env
+else
+    echo "SAM2 is already installed."
+fi
+
 
 # LEO YOU CAN ADD YOUR STUFF HERE FOR REPLICABILITY, LOOK ABOVE
 
@@ -47,3 +77,5 @@ echo "SAM2_PATH=$(pwd)" >> ~/.env
 # ---------------------------------------------
 echo "Environment setup complete."
 echo "Don't forget to download the datasets and precomputed results as indicated in the README."
+echo "Also, make sure to set the correct paths in the .env file located at $WORK_DIR/.env"
+# ---------------------------------------------
