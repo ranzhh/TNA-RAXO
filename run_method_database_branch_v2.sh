@@ -3,9 +3,9 @@
 ########################################################
 #### CHANGE THIS VARIABLES
 ########################################################
-RESULTS_PATH="../results"
-DATASET_PATH="../data/datasets"
-datasets=( "pidray") # "DvXray") # "DET-COMPASS" "HiXray" "CLCXray" "PiXray")
+RESULTS_PATH="/results"
+DATASET_PATH="/data/datasets"
+datasets=( "CLCXray") # "pidray", "DvXray") # "DET-COMPASS" "HiXray" "CLCXray" "PiXray")
 detectors=("groundingDINO") # "detic" "CoDet" "VLDet")
 ########################################################
 
@@ -58,24 +58,25 @@ do
             --gt ${DATASET_PATH}/${dataset}/annotations/full_test.json \
             --res ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}.json \
             --image_path ${DATASET_PATH}/${dataset}/test/
+            # --limit 1
 
 
         # 2) clasification
         CUDA_VISIBLE_DEVICES=0 python raxo/main_with_masks_prop.py \
-            --json_res ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks.json \
+            --json_res ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched.json \
             --image_path ${DATASET_PATH}/${dataset}/test \
             --prototypes ${RESULTS_PATH}/visual_descriptors/known_prototypes_sam2.pt \
             --nms 0.8 \
-            --name overnight \
+            --name disi \
             --branch known
 
         python raxo/uncertanty_estimation_fixed.py \
-            --dets ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_overnight.json
+            --dets ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched_nms_0.8_our_method_disi.json
 
         # Theese are the 100/0 results (using only the in-house samples)
         python raxo/cocoapi_2.py \
             --cocoGt ${DATASET_PATH}/${dataset}/annotations/full_test.json \
-            --cocoDt ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_nms_0.8_our_method_overnight.json
+            --cocoDt ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched_nms_0.8_our_method_disi.json
 
     done
 done
