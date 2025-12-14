@@ -38,8 +38,8 @@ touch $WORK_DIR/.env
 if ! command -v blender &> /dev/null
 then
     echo "Blender could not be found, installing..."
-    wget -c https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz -O - | tar -xz -C /opt/
-    mv /opt/blender-4.4.3-linux64/ /opt/blender
+    curl -L https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz | tar -xJ -C /opt/
+    mv /opt/blender-4.4.3-linux-x64/ /opt/blender
 
     # Create a symlink to make blender accessible from anywhere
     ln -s /opt/blender/blender /usr/local/bin/blender
