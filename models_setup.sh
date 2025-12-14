@@ -38,11 +38,19 @@ touch $WORK_DIR/.env
 if ! command -v blender &> /dev/null
 then
     echo "Blender could not be found, installing..."
-    curl -L https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz | tar -xJ -C /opt/
-    mv /opt/blender-4.4.3-linux-x64/ /opt/blender
+    mkdir -p $HOME/.local/share
+    mkdir -p $HOME/.local/bin
+    curl -L https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz | tar -xJ -C $HOME/.local/share/
+    mv $HOME/.local/share/blender-4.4.3-linux-x64/ $HOME/.local/share/blender
 
     # Create a symlink to make blender accessible from anywhere
-    ln -s /opt/blender/blender /usr/local/bin/blender
+    ln -s $HOME/.local/share/blender/blender $HOME/.local/bin/blender
+    
+    # Ensure ~/.local/bin is in PATH
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
 else
     echo "Blender is already installed." 
 
