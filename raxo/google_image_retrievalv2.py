@@ -229,21 +229,28 @@ def create_llm_processor() -> Optional[object]:
         return None
 
 
-def generate_queries(category: str, llm_processor: Optional[object]) -> list[str]:
+def generate_queries(
+    category: str, 
+    llm_processor: Optional[object], 
+    query_mode: str = "direct",
+    n_queries: int = 10
+) -> list[str]:
     """
     Generate search queries for a category.
     
     Args:
         category: Object category name
         llm_processor: Optional LLM processor for diverse queries
+        query_mode: "direct" or "compositional" (only used with LLM)
+        n_queries: Number of queries to generate (only used with compositional)
         
     Returns:
         List of search queries
     """
     if llm_processor:
         try:
-            queries = llm_processor.generate_queries(category)
-            logger.info(f"LLM generated {len(queries)} queries for '{category}'")
+            queries = llm_processor.generate_queries(category, mode=query_mode, n_queries=n_queries)
+            logger.info(f"LLM ({query_mode}) generated {len(queries)} queries for '{category}'")
             return queries
         except Exception as e:
             logger.warning(f"LLM query generation failed: {e}, using classic query")
@@ -264,13 +271,14 @@ class ImageResult:
     path: Optional[str] = None
 
 
-def google_search(query: str, num_results: int = 10) -> Optional[dict]:
+def google_search(query: str, num_results: int = 10, start: int = 1) -> Optional[dict]:
     """
     Perform a Google Custom Search.
 
     Args:
         query: Search query string
         num_results: Number of results to return (max 10 per request)
+        start: Starting index for pagination (1-based, max 91)
 
     Returns:
         dict: Search results from Google Custom Search API
@@ -283,6 +291,7 @@ def google_search(query: str, num_results: int = 10) -> Optional[dict]:
         "q": query,
         "searchType": "image",
         "num": min(num_results, 10),
+        "start": min(start, 91),  # Google API max start is 91
     }
 
     try:
@@ -299,6 +308,7 @@ def google_search(query: str, num_results: int = 10) -> Optional[dict]:
 def search_images(queries: list[str], limit: int) -> list[ImageResult]:
     """
     Search Google Images with the given queries.
+    Uses pagination to retrieve more than 10 images per query.
     
     Args:
         queries: List of search queries
@@ -308,22 +318,39 @@ def search_images(queries: list[str], limit: int) -> list[ImageResult]:
         List of ImageResult objects
     """
     all_images = []
-    images_per_query = max(1, min(10, limit // len(queries)))  # Max 10 per request
+    images_per_query = max(1, limit // len(queries))
     
     for query in queries:
         if len(all_images) >= limit:
             break
-            
-        results = google_search(query, images_per_query)
         
-        if results and 'items' in results:
-            for item in results['items']:
-                if len(all_images) >= limit:
-                    break
-                all_images.append(ImageResult(url=item['link']))
-                
-        logger.info(f"Query '{query}': found {len(results.get('items', [])) if results else 0} images")
+        query_images = 0
+        start_index = 1
+        
+        # Paginate through results (Google allows max 100 results total, 10 per page)
+        while query_images < images_per_query and start_index <= 91:
+            if len(all_images) >= limit:
+                break
+            
+            # Request up to 10 images per API call
+            num_to_fetch = min(10, images_per_query - query_images, limit - len(all_images))
+            results = google_search(query, num_to_fetch, start_index)
+            
+            if results and 'items' in results:
+                for item in results['items']:
+                    if len(all_images) >= limit or query_images >= images_per_query:
+                        break
+                    all_images.append(ImageResult(url=item['link']))
+                    query_images += 1
+                    
+                logger.info(f"Query '{query}' (start={start_index}): found {len(results.get('items', []))} images")
+            else:
+                # No more results for this query
+                break
+            
+            start_index += 10  # Move to next page
     
+    logger.info(f"Total images collected: {len(all_images)}")
     return all_images
 
 
@@ -476,8 +503,17 @@ def main(args):
         super_category = mapper[category]
         
         # Generate and execute search queries
-        queries = generate_queries(category, llm_processor)
-        images = search_images(queries, CONFIG.search_limit)
+        query_mode = getattr(args, 'query_mode', 'direct')
+        n_queries = getattr(args, 'n_queries', 10)
+        queries = generate_queries(
+            category, 
+            llm_processor, 
+            query_mode=query_mode,
+            n_queries=n_queries
+        )
+        # Search for 2x requested images to account for validation failures
+        search_limit = int(args.n) * 2
+        images = search_images(queries, search_limit)
         
         # Process images
         annotations, img_id = process_category(
@@ -529,6 +565,11 @@ def parse_args():
                         help='Text matching threshold')
     parser.add_argument('--use_llm_queries', action='store_true',
                         help='Use Gemini LLM to generate diverse search queries')
+    parser.add_argument('--query_mode', type=str, default='direct',
+                        choices=['direct', 'compositional'],
+                        help='Query generation mode: direct (LLM generates full queries) or compositional (LLM generates attribute lists, combined programmatically)')
+    parser.add_argument('--n_queries', type=int, default=10,
+                        help='Number of queries to generate with LLM (used with compositional mode)')
     
     return parser.parse_args()
 

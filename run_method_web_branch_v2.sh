@@ -15,9 +15,12 @@ detectors=("groundingDINO") # "detic" "CoDet" "VLDet")
 #### ABLATION STUDY FLAGS
 ########################################################
 # Enable/disable components for ablation experiments
-USE_LLM_QUERIES=false    # Google: use LLM (Gemini) to generate diverse queries
+USE_LLM_QUERIES=true    # Google: use LLM (Gemini) to generate diverse queries
+QUERY_MODE="direct"      # Query generation mode: "direct" (LLM generates full queries) or "compositional" (LLM generates attribute lists)
+N_QUERIES=2             # Number of queries to generate with LLM (per category)
 USE_BLENDER=false        # Blender: multi-view 3D rendering (placeholder - not implemented)
 USE_SAM3D=false          # SAM3D: 3D model from mask (placeholder - not implemented)
+IMAGES_PER_CATEGORY=10   # Number of images to retrieve from Google per category
 ########################################################
 
 
@@ -53,13 +56,13 @@ do
     # Build LLM flag if enabled
     LLM_FLAG=""
     if [ "$USE_LLM_QUERIES" = true ]; then
-        LLM_FLAG="--use_llm_queries"
-        echo "Using LLM-generated queries (Gemini)"
+        LLM_FLAG="--use_llm_queries --query_mode ${QUERY_MODE} --n_queries ${N_QUERIES}"
+        echo "Using LLM-generated queries (Gemini) with mode: ${QUERY_MODE}, n_queries: ${N_QUERIES}"
     fi
     
     CUDA_VISIBLE_DEVICES=0 uv run python raxo/google_image_retrievalv2.py \
         --cats ${RESULTS_PATH}prototypes_web_2/${dataset}/categories.json \
-        --n 30 \
+        --n ${IMAGES_PER_CATEGORY} \
         --out ${RESULTS_PATH}prototypes_web_2/${dataset}/images/ \
         --cats_from_gt ${DATASET_PATH}${dataset}/annotations/full_test.json \
         --box_threshold 0.35 \
