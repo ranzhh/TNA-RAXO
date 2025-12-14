@@ -32,7 +32,7 @@ source ~/.bashrc
 
 # Install required Python packages
 uv sync
-touch $(WORK_DIR)/.env
+touch $WORK_DIR/.env
 
 # Install Blender from source if not already installed. Using version 4.4.3 as an example, make sure it's aligned with your BPY version!
 if ! command -v blender &> /dev/null
@@ -41,14 +41,27 @@ then
     wget -c https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz -O - | tar -xz -C /opt/
     mv /opt/blender-4.4.3-linux64/ /opt/blender
 
+    # Create a symlink to make blender accessible from anywhere
+    ln -s /opt/blender/blender /usr/local/bin/blender
+else
+    echo "Blender is already installed." 
+
+fi
+
 # Download SAM2 and checkpoints
-cd ~
-git clone https://github.com/facebookresearch/sam2.git
-cd sam2
-cd checkpoints
-./download_ckpts.sh
-cd ..
-echo "SAM2_PATH=$(pwd)" >> ~$(WORK_DIR)/.env
+if [ ! -d "$HOME/sam2" ]; then
+    echo "SAM2 not found, cloning and downloading checkpoints..."
+    cd ~
+    git clone https://github.com/facebookresearch/sam2.git
+    cd sam2
+    cd checkpoints
+    ./download_ckpts.sh
+    cd ..
+    echo "SAM2_PATH=$(pwd)" >> ~$WORK_DIR/.env
+else
+    echo "SAM2 is already installed."
+fi
+
 
 # LEO YOU CAN ADD YOUR STUFF HERE FOR REPLICABILITY, LOOK ABOVE
 
@@ -56,3 +69,5 @@ echo "SAM2_PATH=$(pwd)" >> ~$(WORK_DIR)/.env
 # ---------------------------------------------
 echo "Environment setup complete."
 echo "Don't forget to download the datasets and precomputed results as indicated in the README."
+echo "Also, make sure to set the correct paths in the .env file located at $WORK_DIR/.env"
+# ---------------------------------------------
