@@ -16,12 +16,13 @@ import argparse
 import json
 import logging
 import os
+import sys
 from dataclasses import dataclass
 from typing import Optional
 
+import requests
 import torch
 from dotenv import load_dotenv
-from google_images_search import GoogleImagesSearch
 from PIL import Image
 
 from groundingdino.util.inference import load_model, load_image, predict
@@ -256,7 +257,46 @@ def generate_queries(category: str, llm_processor: Optional[object]) -> list[str
 # Image Search & Download
 # =============================================================================
 
-def search_images(queries: list[str], limit: int) -> list:
+@dataclass
+class ImageResult:
+    """Wrapper for image search results."""
+    url: str
+    path: Optional[str] = None
+
+
+def google_search(query: str, num_results: int = 10) -> Optional[dict]:
+    """
+    Perform a Google Custom Search.
+
+    Args:
+        query: Search query string
+        num_results: Number of results to return (max 10 per request)
+
+    Returns:
+        dict: Search results from Google Custom Search API
+    """
+    url = "https://www.googleapis.com/customsearch/v1"
+
+    params = {
+        "key": CONFIG.google_api_key,
+        "cx": CONFIG.google_cx,
+        "q": query,
+        "searchType": "image",
+        "num": min(num_results, 10),
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Search error for '{query}': {e}")
+        if hasattr(response, 'status_code') and response.status_code == 403:
+            logger.error("Check your API key and make sure the Custom Search API is enabled")
+        return None
+
+
+def search_images(queries: list[str], limit: int) -> list[ImageResult]:
     """
     Search Google Images with the given queries.
     
@@ -265,37 +305,39 @@ def search_images(queries: list[str], limit: int) -> list:
         limit: Maximum total images to retrieve
         
     Returns:
-        List of image results
+        List of ImageResult objects
     """
     all_images = []
-    images_per_query = max(1, limit // len(queries))
+    images_per_query = max(1, min(10, limit // len(queries)))  # Max 10 per request
     
     for query in queries:
-        search_params = {
-            'q': query,
-            'num': min(images_per_query, limit),
-            'searchType': 'image',
-            'dateRestrict': 'y7',
-            'safe': '',
-            'fileType': 'jpg|png',
-            'imgType': 'photo',
-            'lr': 'lang_en',
-        }
+        if len(all_images) >= limit:
+            break
+            
+        results = google_search(query, images_per_query)
         
-        try:
-            gis = GoogleImagesSearch(CONFIG.google_api_key, CONFIG.google_cx)
-            gis.search(search_params=search_params)
-            all_images.extend(gis.results())
-        except Exception as e:
-            logger.error(f"Search error for '{query}': {e}")
-            continue
+        if results and 'items' in results:
+            for item in results['items']:
+                if len(all_images) >= limit:
+                    break
+                all_images.append(ImageResult(url=item['link']))
+                
+        logger.info(f"Query '{query}': found {len(results.get('items', [])) if results else 0} images")
     
     return all_images
 
 
-def download_and_rename(image, output_dir: str, category: str, img_id: int) -> Optional[str]:
+
+
+def download_and_rename(image: ImageResult, output_dir: str, category: str, img_id: int) -> Optional[str]:
     """
     Download an image and rename it with category prefix.
+    
+    Args:
+        image: ImageResult with URL to download
+        output_dir: Base output directory
+        category: Category name for file naming
+        img_id: Image ID for unique naming
     
     Returns:
         New image path or None if download failed
@@ -303,17 +345,38 @@ def download_and_rename(image, output_dir: str, category: str, img_id: int) -> O
     try:
         path = os.path.join(output_dir, CONFIG.images_subdir)
         os.makedirs(path, exist_ok=True)
-        image.download(path)
         
-        original_name = os.path.basename(image.path)
-        _, ext = os.path.splitext(original_name)
+        # Headers to mimic a browser request (reduces 403 errors)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.google.com/',
+        }
+        
+        # Download image from URL
+        response = requests.get(image.url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        # Determine extension from content-type or URL
+        content_type = response.headers.get('content-type', '')
+        if 'png' in content_type:
+            ext = '.png'
+        elif 'gif' in content_type:
+            ext = '.gif'
+        else:
+            ext = '.jpg'
+        
         new_name = f"cat_{category}_{img_id}{ext}"
         new_path = os.path.join(path, new_name)
         
-        os.rename(image.path, new_path)
+        with open(new_path, 'wb') as f:
+            f.write(response.content)
+        
+        image.path = new_path
         return new_path
     except Exception as e:
-        logger.warning(f"Download failed: {e}")
+        logger.warning(f"Download failed for {image.url}: {e}")
         return None
 
 

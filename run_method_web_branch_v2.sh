@@ -57,7 +57,6 @@ do
         echo "Using LLM-generated queries (Gemini)"
     fi
     
-    # Uncomment the following to run web retrieval (currently using cached results)
     CUDA_VISIBLE_DEVICES=0 uv run python raxo/google_image_retrievalv2.py \
         --cats ${RESULTS_PATH}prototypes_web_2/${dataset}/categories.json \
         --n 30 \
