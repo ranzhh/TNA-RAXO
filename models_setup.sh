@@ -3,6 +3,8 @@
 # This file takes care of setting up the required environment for raxo2.
 # It installs necessary dependencies and configures the system.
 
+WORK_DIR=$(pwd)
+
 # Ensure curl and git are installed
 if ! command -v curl &> /dev/null
 then
@@ -30,7 +32,14 @@ source ~/.bashrc
 
 # Install required Python packages
 uv sync
-touch .env
+touch $(WORK_DIR)/.env
+
+# Install Blender from source if not already installed. Using version 4.4.3 as an example, make sure it's aligned with your BPY version!
+if ! command -v blender &> /dev/null
+then
+    echo "Blender could not be found, installing..."
+    wget -c https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz -O - | tar -xz -C /opt/
+    mv /opt/blender-4.4.3-linux64/ /opt/blender
 
 # Download SAM2 and checkpoints
 cd ~
@@ -39,7 +48,7 @@ cd sam2
 cd checkpoints
 ./download_ckpts.sh
 cd ..
-echo "SAM2_PATH=$(pwd)" >> ~/.env
+echo "SAM2_PATH=$(pwd)" >> ~$(WORK_DIR)/.env
 
 # LEO YOU CAN ADD YOUR STUFF HERE FOR REPLICABILITY, LOOK ABOVE
 
