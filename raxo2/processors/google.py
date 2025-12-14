@@ -24,42 +24,58 @@ class GoogleProcessor:
 
         # Prompt per generazione DIRETTA (LLM genera query complete)
         self.prompt_direct = '''
-Generate {N_QUERIES} Google Image search queries for: "{OBJECT_CLASS}"
-
-PURPOSE: X-ray scanner shape training (airport security research)
+Generate {N_QUERIES} Google Images search queries for: "{OBJECT_CLASS}"
+PURPOSE: airport X-ray scanner shape learning
 
 OBJECT CONSTRAINTS:
-- Transportable in luggage (max ~120cm)
-- Exclude: industrial machinery, vehicle parts, large furniture, wind turbines
+- Must fit in luggage (≤120 cm)
+- Exclude industrial machinery, vehicle parts, fixed installations
 
-DIVERSITY REQUIREMENTS:
-- Conventional AND improvised/modified variants
-- Multiple viewpoints: top view, side profile, flat lay, angled
-- Different states if applicable: open/closed, folded/extended
+QUERY DIVERSITY RULES:
+- Cover visually distinct variants relevant to X-ray appearance
+  (commercial, modified, improvised when applicable)
+- Include different configurations or states ONLY if meaningful for the object
+- Use multiple viewpoints when they affect silhouette or internal layout
 
-AVOID: illustrations, drawings, icons, occluded objects
+FORMAT:
+- 3-8 words per query
+- Comma-separated list only
+- No explanations
 
-OUTPUT: Comma-separated queries only (3-8 words each), no explanations
-
-Example for "knife": kitchen knife top view, tactical folder open, improvised sharpened blade, ceramic knife flat lay
+Example (knife):
+kitchen knife top view, folding knife open, ceramic blade flat lay, improvised metal blade
 '''
+
 
         # Prompt per generazione COMPOSIZIONALE (LLM genera liste di attributi)
         self.prompt_compositional = '''
-Generate attribute lists for: "{OBJECT_CLASS}" (airport X-ray scanner research)
+Generate Google search query attributes for "{OBJECT_CLASS}" 
+(airport X-ray image classification research).
 
-Create 3-4 mutually exclusive attribute categories for search query combinations.
-Objects must be transportable in luggage (max ~120cm). Exclude industrial/large equipment.
+Select 3-4 MUTUALLY EXCLUSIVE attribute categories that are visually and structurally
+relevant for identifying this object in X-ray scans.
 
-CATEGORIES:
-1. VARIANTS (required, 4-6 items): conventional AND improvised/modified types
-2. STATES (if applicable, 2-4 items): open/closed, folded/extended, assembled/disassembled  
-3. VIEWPOINTS (required, 3-4 items): top view, side profile, flat lay, angled view
-4. OPTIONAL: size/material variants if shape-relevant
+Guidelines:
+- Categories must be appropriate for the object class (do NOT force generic ones).
+- Each category: 3-6 concrete, non-overlapping values.
+- Objects must fit in luggage (≤120 cm). Exclude industrial or fixed installations.
+- Prefer attributes that change X-ray appearance (shape, density, configuration).
 
-OUTPUT: JSON array of arrays only, no explanation
+Commonly useful categories (use only if relevant):
+- VARIANTS (commercial, modified, improvised)
+- CONFIGURATION / STATE (assembled, folded, open, loaded, etc.)
+- MATERIAL / DENSITY (if affects X-ray signature)
+- VIEWPOINTS (top, side, angled, flat lay)
 
-Example: [["kitchen knife", "tactical knife", "box cutter", "improvised blade", "scalpel"], ["open", "closed"], ["top view", "side profile", "flat lay"]]
+OUTPUT:
+JSON array of arrays only. No explanations, no labels.
+
+Example:
+[
+  ["kitchen knife", "box cutter", "ceramic blade", "improvised blade"],
+  ["open", "closed", "folded"],
+  ["top view", "side profile", "angled view"]
+]
 '''
 
     def generate_queries_direct(self, object_class: str, n_queries: int = 10) -> list[str]:
