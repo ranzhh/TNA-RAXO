@@ -1,88 +1,124 @@
 """
-Thanks to: https://github.com/cvlab-columbia/DoubleRight/blob/master/google_image_search_url.py and mmdetection inference script
+Thanks to: https://github.com/cvlab-columbia/DoubleRight/blob/master/google_image_search_url.py
+Modified to use GroundingDINO standalone (rf-groundingdino) instead of mmdet
 """
 
 ##############################################################
 import argparse
 import os
 import json
+import logging
+from dotenv import load_dotenv
 from google_images_search import GoogleImagesSearch
 ##############################################################
 from PIL import Image
+import torch
 
-from mmdet.apis import DetInferencer
-from mmdet.evaluation import get_classes
-import json
-import os
+# GroundingDINO imports (standalone version)
+from groundingdino.util.inference import load_model, load_image, predict
 
 import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
+nltk.download('punkt', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 ##############################################################
 
+# Load environment variables from .env file
+load_dotenv()
 
-API_KEY = ''
-CX = ''
+API_KEY = os.getenv('GOOGLE_API_KEY')
+CX = os.getenv('GOOGLE_CX')
 INIT_IMAGES_DOWNLOAD_DIR = 'imgs/'
 INIT_IMAGES_JSON = 'annotations.json'
 FINAL_IMAGES_ = 'imgs_final/'
-promt = "A photo of a "
+prompt = "A photo of a "
 ##############################################################
 
 
 ##############################################################
-"""
-{'inputs': '/datasets/xray-datasets/pidray/full_test/xray_easy00026.png', 'out_dir': './borrar/', 'texts': 'Baton .', 'pred_score_thr': 0.3, 'batch_size': 1, 'show': False, 'no_save_vis': False, 'no_save_pred': False, 'print_result': False, 'custom_entities': False, 'tokens_positive': None}
-
-{'model': 'projects/GroundingDINO_modify/configs/grounding_dino_swin-b_finetune_16xb2_1x_pidray.py', 
-'weights': '/models/groundingDINO/groundingdino_swinb_cogcoor_mmdet-55949c9c.pth', 'device': 'cuda:0', 'palette': 'none'}
-"""
-
-DEVICE='cuda:0'
+DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 SCORE_THS = 0.5
-BATCH_SIZE = 1
-CHUNKED_SIZE = -1
+BOX_THS = 0.35  # Box threshold for GroundingDINO
+TEXT_THS = 0.25  # Text threshold for GroundingDINO
 LIMIT = 60  # Limit of tries per categories. Number of images that will be searched from internet
 
-call_args = {
-    'inputs': None, 
-    'out_dir': None,
-    'texts': None,
-    'pred_score_thr': SCORE_THS,
-    'batch_size': BATCH_SIZE,
-    'show': False,
-    'no_save_vis': False,
-    'no_save_pred': True,
-    'print_result': False, 
-    'custom_entities': False,
-    'tokens_positive': None
-}
-
-
+# Default model paths for GroundingDINO - dynamically find from installed package
+import groundingdino
+_GD_PATH = os.path.dirname(groundingdino.__file__)
+DEFAULT_CONFIG = os.path.join(_GD_PATH, "config", "GroundingDINO_SwinB_cfg.py")
+DEFAULT_WEIGHTS = "IDEA-Research/grounding-dino-base"  # Will be downloaded from HuggingFace
 
 
 parser = argparse.ArgumentParser(description='Web image search of given categories')
 parser.add_argument('--cats', required=True, help='Path the .json file where categories are stores')
 parser.add_argument('--n', required=True, help='Number of examples images per class')
-parser.add_argument('--model_config', required=True, help='Path to the .py with the configuration info')
-parser.add_argument('--model_weights', required=True, help='Checkpoint file')
+parser.add_argument('--model_config', required=False, default=DEFAULT_CONFIG, help='Path to the GroundingDINO config file')
+parser.add_argument('--model_weights', required=False, default=DEFAULT_WEIGHTS, help='Path to the GroundingDINO checkpoint file')
 parser.add_argument('--out', required=True, help='Path to the directory where results will be saved')
 parser.add_argument('--cats_from_gt', required=True, help='Path to the directory where GT test info is located. COCO format')
+parser.add_argument('--box_threshold', type=float, default=BOX_THS, help='Box threshold for GroundingDINO')
+parser.add_argument('--text_threshold', type=float, default=TEXT_THS, help='Text threshold for GroundingDINO')
 
 
 def build_inferencer(args):
-    init_args = {'model':args.model_config, 'weights':args.model_weights, 'device':DEVICE, 'palette':'none'}
-    inferencer = DetInferencer(**init_args)
-    inferencer.model.test_cfg.chunked_size = CHUNKED_SIZE
+    """Load GroundingDINO model. Downloads weights from HuggingFace if needed."""
+    from huggingface_hub import hf_hub_download
+    
+    # Check if weights path is a HuggingFace repo ID or local file
+    weights_path = args.model_weights
+    if not os.path.exists(weights_path):
+        logger.info("Downloading GroundingDINO weights from HuggingFace...")
+        weights_path = hf_hub_download(
+            repo_id='ShilongLiu/GroundingDINO',
+            filename='groundingdino_swinb_cogcoor.pth'
+        )
+        logger.info(f"Weights downloaded to: {weights_path}")
+    
+    logger.info(f"Loading GroundingDINO model from {weights_path}")
+    model = load_model(args.model_config, weights_path, device=DEVICE)
+    logger.info(f"Model loaded on {DEVICE}")
+    return model
 
-    "NOTE: call arguments must be writted"
-    return inferencer
+
+def run_inference(model, image_path, text_prompt, box_threshold, text_threshold):
+    """
+    Run GroundingDINO inference on a single image.
+    Returns: boxes (xyxy format), logits, phrases
+    """
+    # Load and preprocess image
+    image_source, image_tensor = load_image(image_path)
+    
+    # Run prediction
+    boxes, logits, phrases = predict(
+        model=model,
+        image=image_tensor,
+        caption=text_prompt,
+        box_threshold=box_threshold,
+        text_threshold=text_threshold,
+        device=DEVICE
+    )
+    
+    # Convert boxes from normalized cxcywh to xyxy pixel coordinates
+    h, w = image_source.shape[:2]
+    boxes_xyxy = []
+    for box in boxes:
+        cx, cy, bw, bh = box.tolist()
+        x1 = (cx - bw/2) * w
+        y1 = (cy - bh/2) * h
+        x2 = (cx + bw/2) * w
+        y2 = (cy + bh/2) * h
+        boxes_xyxy.append([x1, y1, x2, y2])
+    
+    return boxes_xyxy, logits.tolist(), phrases
 
 
 # This main keep the top1 detection for retrieved image, if its confidence is bigger than the threshold
 def main2(args):
     # 1) Build model inferencer
-    inferencer = build_inferencer(args)
+    model = build_inferencer(args)
     os.makedirs(args.out, exist_ok=True)
     
     # 2) Obtain categories for wich images from internet will be retrieved
@@ -93,12 +129,12 @@ def main2(args):
             real_cats = data_cats['category_list_real']
             find_cats = data_cats['category_list_find']
             mapper = {find:real for find,real in zip(find_cats, real_cats)}
-            print(mapper)
+            logger.info(f"Category mapper: {mapper}")
         else:
             real_cats = data_cats['categories']
             find_cats = data_cats['categories']
             mapper = {find:real for find,real in zip(find_cats, real_cats)}
-            print(mapper)
+            logger.info(f"Category mapper: {mapper}")
     else:
         from pycocotools.coco import COCO
         coco = COCO(args.cats_from_gt)
@@ -107,7 +143,7 @@ def main2(args):
         real_cats = [cat["name"] for cat in categories]
         find_cats = [cat["name"] for cat in categories]
         mapper = {find:real for find,real in zip(find_cats, real_cats)}
-        print(mapper)
+        logger.info(f"Category mapper: {mapper}")
 
 
     
@@ -115,11 +151,9 @@ def main2(args):
     try:
         img_id = 0
         for category in find_cats:
-            if category!="open-end wrench":
-                continue
             # 3) For each category obtain the web images
-            query = promt + f'{category}'
-            print('qi', query, API_KEY)
+            query = prompt + f'{category}'
+            logger.info(f'Searching for: {query}')
             _search_params = {
                     'q': query,
                     'num': LIMIT,
@@ -135,13 +169,14 @@ def main2(args):
                     'lr': 'lang_en',
                 }
 
-            # Init Google Image Search every iteration to avoid repetition error # trying
+            # Init Google Image Search every iteration to avoid repetition error
             gis = GoogleImagesSearch(API_KEY, CX)
-            try :
+            try:
                 gis.search(search_params=_search_params)
             except Exception as Error:
-                print ('error during query:', Error)
-                print('Query error with :', query)
+                logger.error(f'Error during query: {Error}')
+                logger.error(f'Query error with: {query}')
+                continue
 
             # 4) While the number of good images in the category is not args.n (or still images)
             n_images_cat_i = 0
@@ -151,6 +186,7 @@ def main2(args):
                         break
 
                     path = os.path.join(args.out, INIT_IMAGES_DOWNLOAD_DIR)
+                    os.makedirs(path, exist_ok=True)
                     image.download(path)
                     
                     original_name = os.path.basename(image.path)
@@ -161,20 +197,30 @@ def main2(args):
                     new_image_path = image.path.replace(original_name, new_img_name)
                     os.rename(image.path, new_image_path)
 
-
-                    # Load image and run OVOD
-                    call_args['inputs'] = new_image_path
-                    call_args['texts'] = f"{category} ."
-                    call_args['out_dir'] = os.path.join(args.out, FINAL_IMAGES_)
-                    #print(call_args)  # debug
-
+                    # Run GroundingDINO inference
+                    text_prompt = f"{category}"
+                    
                     try:
-                        res = inferencer(**call_args)
-                    except Exception:
+                        boxes, scores, phrases = run_inference(
+                            model, 
+                            new_image_path, 
+                            text_prompt,
+                            args.box_threshold,
+                            args.text_threshold
+                        )
+                    except Exception as e:
+                        logger.warning(f"Inference error for {new_image_path}: {e}")
                         continue
-                    # Get predictions with score greater than defined threhold
-                    bbox_final = res['predictions'][0]["bboxes"][0]
-                    score = res['predictions'][0]["scores"][0]
+                    
+                    # Check if we have any detections
+                    if len(boxes) == 0 or len(scores) == 0:
+                        continue
+                        
+                    # Get best detection (highest score)
+                    best_idx = scores.index(max(scores))
+                    bbox_final = boxes[best_idx]
+                    score = scores[best_idx]
+                    
                     if score > SCORE_THS:
                         # Keep it
                         try:
@@ -182,119 +228,35 @@ def main2(args):
                         except Exception:
                             continue
                         
-                        # Modify this to save bbox instead of crop image!!!!
                         # Append annotations
-                        final_json['images'].append({"image_name": new_img_name, "url":image.url, "category": category, "super_category": mapper[category], "bbox_xyxy":bbox_final})
+                        final_json['images'].append({
+                            "image_name": new_img_name, 
+                            "url": image.url, 
+                            "category": category, 
+                            "super_category": mapper[category], 
+                            "bbox_xyxy": bbox_final,
+                            "score": score
+                        })
                         n_images_cat_i += 1
-                except:
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing image for category {category}: {e}")
                     continue
 
 
-            print(f"Category {category} of super_category {mapper[category]} ends with {n_images_cat_i} objects !!")   
+            logger.info(f"Category {category} of super_category {mapper[category]} ends with {n_images_cat_i} objects !!")   
 
         # Save final json
         with open(os.path.join(args.out, INIT_IMAGES_JSON), 'w') as f:
-            json.dump(final_json, f)
+            json.dump(final_json, f, indent=2)
+        logger.info(f"Saved annotations to {os.path.join(args.out, INIT_IMAGES_JSON)}")
     
-    except:
+    except Exception as e:
+        logger.error(f"Critical error during processing: {e}")
         with open(os.path.join(args.out, INIT_IMAGES_JSON), 'w') as f:
-            json.dump(final_json, f)
-
-
-
-# def main(args):
-#     """
-#     TO keep all the detections with confidence bigger than 0.5
-#     """
-#     # 1) Build model inferencer
-#     inferencer = build_inferencer(args)
-#     os.makedirs(args.out, exist_ok=True)
-    
-#     # 2) Obtain categories for wich images from internet will be retrieved
-#     data_cats = json.load(open(args.cats))
-#     real_cats = data_cats['category_list_real']
-#     find_cats = data_cats['category_list_find']
-#     mapper = {find:real for find,real in zip(find_cats, real_cats)}
-    
-    
-#     final_json = {"images":[]}
-#     for category in find_cats:
-#         # 3) For each category obtain the web images
-#         query = promt + f'{category}'
-#         print('qi', query, API_KEY)
-#         _search_params = {
-#                 'q': query,
-#                 'num': LIMIT,
-#                 'searchType': 'image',
-#                 'dateRestrict': 'y6',  # Results from the last 6 years
-#                 'safe': '',
-#                 'fileType': 'jpg|png',
-#                 'imgType': 'photo',
-#                 'imgSize': '',
-#                 'imgDominantColor': '',
-#                 'rights': '',
-#                 'imgColorType': "",
-#                 'lr': 'lang_en',
-#             }
-
-#         # Init Google Image Search every iteration to avoid repetition error # trying
-#         gis = GoogleImagesSearch(API_KEY, CX)
-#         try :
-#             gis.search(search_params=_search_params)
-#         except Exception as Error:
-#             print ('error during query:', Error)
-#             print('Query error with :', query)
-
-#         # 4) While the number of good images in the category is not args.n (or still images)
-#         n_images_cat_i = 0
-#         for image in gis.results():
-#             path = os.path.join(args.out, INIT_IMAGES_DOWNLOAD_DIR)
-#             image.download(path)
-
-#             # Load image and run OVOD
-#             call_args['inputs'] = image.path
-#             call_args['texts'] = f"{category} ."
-#             call_args['out_dir'] = os.path.join(args.out, FINAL_IMAGES_)
-#             #print(call_args)  # debug
-
-#             try:
-#                 res = inferencer(**call_args)
-#             except Exception:
-#                 continue
-#             # Get predictions with score greater than defined threhold
-#             bboxes = [bbox for bbox, score in zip(res['predictions'][0]["bboxes"], res['predictions'][0]["scores"]) if score > SCORE_THS]
-
-#             # Keep the bboxes 
-#             for idx, bbox_final in enumerate(bboxes):
-#                 # If we already have N objets for the class -> break
-#                 if n_images_cat_i >= int(args.n):
-#                     break 
-#                 try:
-#                     img_aux = Image.open(image.path)
-#                 except Exception:
-#                     continue
-#                 img_aux = img_aux.crop(bbox_final)
-#                 name = os.path.join(os.path.join(args.out, FINAL_IMAGES_),os.path.basename(image.path))
-#                 _, extension = os.path.splitext(name)
-#                 name = name.replace(extension, f"_{idx}.png")
-#                 img_aux.save(name)
-#                 # Append annotations
-#                 final_json['images'].append({"image_name": os.path.basename(name), "url":image.url, "category": mapper[category]})
-#                 n_images_cat_i += 1
-            
-#             # If we already get the n images break
-#             if n_images_cat_i >= int(args.n):
-#                 break
-
-#         print(f"Category {mapper[category]} ends with {n_images_cat_i} objects !!")   
-
-#     # Save final json
-#     with open(os.path.join(args.out, INIT_IMAGES_JSON), 'w') as f:
-#         json.dump(final_json, f)
-
+            json.dump(final_json, f, indent=2)
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    #main(args)
     main2(args)

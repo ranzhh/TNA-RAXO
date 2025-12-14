@@ -15,6 +15,7 @@ dependencies = [
     "pillow>=12.0.0",
     "pycocotools>=2.0.10",
     "python-dotenv>=1.2.1",
+    "rf-groundingdino>=0.3.0",
     "sam-2",
     "supervision>=0.27.0",
     "tabulate>=0.9.0",
@@ -28,3 +29,6 @@ dependencies = [
 
 [tool.uv.sources]
 sam-2 = { path = "../sam2" }
+
+[tool.uv.extra-build-dependencies]
+groundingdino-py = ["torch"]
