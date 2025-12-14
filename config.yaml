@@ -34,8 +34,8 @@ grounding:
 
 # Output settings
 output:
-  format: "ply"  # Gaussian splat PLY format
-  save_path: "outputs/splat.ply"
+  format: "mesh"  # "mesh" for triangle mesh PLY, "gaussian" for Gaussian splat PLY
+  save_path: "outputs/model.ply"
   
 # Device
 device:
