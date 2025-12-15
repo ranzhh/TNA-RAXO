@@ -273,7 +273,7 @@ class CocoPrototypesUnknown(Dataset):
 
         self.dtpath = dtpath
         self.transforms = transforms
-        self.gt = gt["images"]
+        self.gt = gt
 
         # To maintain interoperability with previous versions where there was no supercategory.
         if "super_category" not in self.gt[0]:

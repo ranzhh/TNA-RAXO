@@ -40,6 +40,7 @@ parser.add_argument(
     default="known",
     help="Branch of the method",
 )
+parser.add_argument("--out", required=True, help="Path to the where the final results will be saved")
 
 
 def custom_collate_fn(batch):
@@ -159,6 +160,8 @@ def main_known(args):
     # 4) Main re-clasification loop
     print("Reclasification...")
     new_anots = []
+    print("Number of batches: ", len(dataloader))
+    
     for batch in tqdm(dataloader):
         crops, annotations, masks = batch
         crops = crops.to(device)
@@ -218,10 +221,14 @@ def main_known(args):
             }
             new_anots.append(anot_new)
 
+    # Create path to save final results if it does not exist
+    out_dir = os.path.dirname(args.out)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
     # Save final results
-    with open(
-        args.json_res.replace(".json", f"_nms_{args.nms}_our_method_{args.name}.json"), "w"
-    ) as f:
+    with open(args.out, "w") as f:
+        print(f"Saving final results to {args.out}")
         json.dump(new_anots, f)
 
 

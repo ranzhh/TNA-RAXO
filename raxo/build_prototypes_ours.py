@@ -11,7 +11,7 @@ import torchvision.transforms as T
 import argparse
 import json
 
-from dataset import CocoPrototypes_with_masks, CocoPrototypesFullImage
+from dataset import CocoPrototypes_with_masks, CocoPrototypesFullImage, CocoPrototypesUnknown_with_masks, CocoPrototypesUnknown
 from torch.utils.data import DataLoader
 from torchvision.transforms.functional import resize
 from torchvision.transforms import InterpolationMode
@@ -45,7 +45,7 @@ def compute_full_image_negative_prototype(model, dataloader):
     sum_tensor = torch.zeros(DINO_DIMENSION)
     n_elements = 0
     for batch in tqdm(dataloader):
-        images = batch
+        images, cat, supercat = batch
         images = images.cuda()
         with torch.no_grad():
             outputs = model(images).cpu()
@@ -97,7 +97,7 @@ def compute_prototypes(model, dataloader: DataLoader, mapper_real_to_name, vocab
         
         # Append element to pos_prototypes
         for out, anot in zip(outs, annotations):            
-            pos_prototypes[mapper_real_to_name[anot['category_id']]].append(out)
+            pos_prototypes[anot['category']].append(out)
             
         
         # TO SAME BUT WITH INVERSE MASK
@@ -110,7 +110,7 @@ def compute_prototypes(model, dataloader: DataLoader, mapper_real_to_name, vocab
         outs = sum_masked / count_masked  # Shape: [n_batch, 1, 768]
         outs = outs.squeeze()
         for out, anot in zip(outs, annotations):
-            neg_prototypes[mapper_real_to_name[anot['category_id']]].append(out)
+            neg_prototypes[anot["category"]].append(out)
             
     
     final_prototypes = {}
@@ -156,8 +156,7 @@ def compute_prototypes(model, dataloader: DataLoader, mapper_real_to_name, vocab
 
 def main(args):
     """
-    Computes the positive C prototypes (c=card(classes)); and the background full image one
-    """
+    Computes the positive C prototypes (c=card(classes)); and the background full image one"""
     
     def custom_collate_fn_CocoPrototypes(batch):
         # Separate images and dictionaries
@@ -174,29 +173,27 @@ def main(args):
         return images, dicts, masks
 
 
-    gt = COCO(args.gt)
-    
-    # Obtain vocab from categories
-    cats = gt.loadCats(gt.getCatIds())
-    mapper_real_to_name = {x['id']:x['name'] for x in cats}
-    vocab = [x['name'] for x in cats] 
+    gt = json.load(open(args.gt))
+    vocab = set([i["category"] for i in gt])
+    mapper_real_to_name = {cat:cat for cat in vocab}
     
     # 1) Build dino model
     transforms, model = build_model()
     
     # 2) Class-specific positive proposals and hard-negative prototype
-    data = CocoPrototypes_with_masks(gt, args.image_path, transforms)
+    data = CocoPrototypesUnknown_with_masks(gt, args.image_path, transforms)
     dataloader = DataLoader(data, batch_size=64, shuffle=False, num_workers=8, collate_fn=custom_collate_fn_CocoPrototypes)
     prototypes = compute_prototypes(model, dataloader, mapper_real_to_name, vocab)
     
     ## 3) Full image negative prototype
-    data_full_image = CocoPrototypesFullImage(gt, args.image_path, transforms)
+    data_full_image = CocoPrototypesUnknown(gt, args.image_path, transforms)
     dataloader_full_image = DataLoader(data_full_image, batch_size=64, shuffle=False, num_workers=8)
     negative_prot_full_image = compute_full_image_negative_prototype(model, dataloader_full_image)
     prototypes['negative'] = {"prototype": negative_prot_full_image, "supercategory":"negative"}
 
     
     # Save prototypes in file
+    print("Saving prototypes to ", args.out)
     torch.save(prototypes, args.out)
     
     

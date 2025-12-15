@@ -49,7 +49,10 @@ def main(args):
             output[mask > 0] = category_avg_colors[crop['category']]
         output_image = Image.fromarray(output)
         try:
-            output_image.save(os.path.join(args.out, f"{crop['image_name']}"))
+            # Create subdirectory if image_name contains a path (e.g., 'cat_blade_0/view_000.png')
+            output_path = os.path.join(args.out, crop['image_name'])
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            output_image.save(output_path)
         except:
             print(crop['image_name'])
             continue

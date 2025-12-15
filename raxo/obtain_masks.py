@@ -205,7 +205,7 @@ def main_unknown(args, plot_result=True):
         images_anots_with_masks.append(new_image_anot)
 
     # Save new annotations with masks
-    save_name = args.gt.replace(".json", "_with_masks.json")
+    save_name = args.gt.replace(".json", "_with_masks.json") # TODO: change this
     print(save_name)
     with open(save_name, "w") as fp:
         s = json.dumps(images_anots_with_masks, indent=4, sort_keys=True)
