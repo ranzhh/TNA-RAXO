@@ -54,7 +54,7 @@ do
         echo "Obtaining results with database-branch in dataset: $dataset"
 
         # 1) # Extract masks. See extract_masks_inference.sh and extract_masks_inference_run.sh
-        CUDA_VISIBLE_DEVICES=0 python raxo/obtain_masks_res_inference.py \
+        CUDA_VISIBLE_DEVICES=0 uv run python raxo/obtain_masks_res_inference.py \
             --gt ${DATASET_PATH}/${dataset}/annotations/full_test.json \
             --res ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}.json \
             --image_path ${DATASET_PATH}/${dataset}/test/
@@ -62,7 +62,7 @@ do
 
 
         # 2) clasification
-        CUDA_VISIBLE_DEVICES=0 python raxo/main_with_masks_prop.py \
+        CUDA_VISIBLE_DEVICES=0 uv run python raxo/main_with_masks_prop.py \
             --json_res ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched.json \
             --image_path ${DATASET_PATH}/${dataset}/test \
             --prototypes ${RESULTS_PATH}/visual_descriptors/known_prototypes_sam2.pt \
@@ -70,11 +70,11 @@ do
             --name disi \
             --branch known
 
-        python raxo/uncertanty_estimation_fixed.py \
+        uv run python raxo/uncertanty_estimation_fixed.py \
             --dets ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched_nms_0.8_our_method_disi.json
 
         # Theese are the 100/0 results (using only the in-house samples)
-        python raxo/cocoapi_2.py \
+        uv run python raxo/cocoapi_2.py \
             --cocoGt ${DATASET_PATH}/${dataset}/annotations/full_test.json \
             --cocoDt ${RESULTS_PATH}/initial_detections/${detector}/coco_results.bbox_${dataset}_with_masks_batched_nms_0.8_our_method_disi.json
 
