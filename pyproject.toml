@@ -25,6 +25,7 @@ dependencies = [
     "torch>=2.9.1",
     "torchvision>=0.24.1",
     "tqdm>=4.67.1",
+    "transformers>=4.36.0",  # Override old transformers from rf-groundingdino (provides pre-built tokenizers)
     "wandb>=0.23.0",
     "weave>=0.52.17",
     # SAM-3D-Objects dependencies
